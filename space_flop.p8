@@ -5,14 +5,15 @@ __lua__
 -- by yragael2078
 
 function _init()
- gravity=0.8
- boost=12
- speed=2
- xpos=25
- star_density=0.002
- sound=true
+ gravity=0.8 -- fall down acceleration
+ boost=12 -- up force
+ speed=2 -- general speed
+ xpos=25 -- initial horizontal ship position
+ gap_size=30 -- size of post gap
+ star_density=0.002 -- density of stars on background
+ blockout=30 -- number of frames blocking input
+
  t=0
- blockout=30
  
  init_particules()
  init_stars()
@@ -27,10 +28,11 @@ function _update()
   end
   if btnp(❎) then
    state="game"
+   add(posts, make_post())
   end
  elseif state=="game" then
   update_stars()
-  update_post()
+  update_posts()
   update_saucer()
   update_particules()
   constrain_saucer()
@@ -63,7 +65,7 @@ function _draw()
    print("press ❎ to fly",33,70,7)
   end
  elseif state=="game" then
-  draw_post()
+  draw_posts()
   draw_saucer()
   draw_score()
   if boom then
@@ -92,12 +94,12 @@ function _draw()
    add(parts,sw)
   end
  elseif state=="pause" then
-  draw_post()
+  draw_posts()
   draw_saucer()
   draw_pause()
   draw_score()
  elseif state=="gameover" then
-  draw_post()
+  draw_posts()
   draw_particules()
   rectfill(43,49,79,55,2)
   print("game over",44,50,7)
@@ -117,7 +119,7 @@ function init_game()
  boom=false
  score=0
  
- init_post()
+ init_posts()
  init_saucer()
 end
 -->8
@@ -138,7 +140,7 @@ function update_saucer()
  if btnp(❎) then
   saucer.b=boost
   saucer.g=gravity
-  if (sound) sfx(0)
+  sfx(0)
  else
   if saucer.b>0 then
    saucer.b=saucer.b*0.6
@@ -166,11 +168,13 @@ end
 
 function collide()
  local c=false
- if saucer.x+8>=gap.xpos and saucer.y+8>=gap.ypos+gap.size/2 and saucer.x<=gap.xpos+16 then
-  c=true
- end
- if saucer.x+8>=gap.xpos and saucer.y<=gap.ypos-gap.size/2 and saucer.x<=gap.xpos+16 then
-  c=true
+ for p in all(posts) do
+  if saucer.x+8>=p.xpos and saucer.y+8>=p.ypos+p.size/2 and saucer.x<=p.xpos+16 then
+   c=true
+  end
+  if saucer.x+8>=p.xpos and saucer.y<=p.ypos-p.size/2 and saucer.x<=p.xpos+16 then
+   c=true
+  end
  end
  return c
 end
@@ -224,31 +228,41 @@ end
 -->8
 -- post --
 
-function init_post()
- gap={
+function init_posts()
+ posts={}
+end
+
+function update_posts()
+ for p in all(posts) do
+  if p.xpos<-7 then
+   del(posts,p)
+  end
+  p.xpos-=speed
+  -- print(gap)
+ end
+end
+
+function draw_posts()
+ for p in all(posts) do
+  for i=1,15 do
+   spr(18,p.xpos,p.ypos+p.size/2+i*8,2,1)
+   spr(18,p.xpos,p.ypos-p.size/2-i*8-8,2,1)
+  end
+  spr(2,p.xpos,p.ypos+p.size/2,2,1)
+  spr(2,p.xpos,p.ypos-p.size/2-8,2,1,false,true)
+  --line(0,gap.ypos+gap.size/2,127,gap.ypos+gap.size/2,8)
+  --line(0,gap.ypos-gap.size/2,127,gap.ypos-gap.size/2,8)
+ end
+end
+
+function make_post()
+ local p={
   xpos=128,
   ypos=40,
-  size=30
+  size=gap_size
  }
-end
-
-function update_post()
- if gap.xpos<-7 then
-  gap.xpos=128
-  gap.ypos=flr(rnd(128-gap.size-16)+8+gap.size/2)
- end
- gap.xpos-=speed
-end
-
-function draw_post()
- for i=1,15 do
-  spr(18,gap.xpos,gap.ypos+gap.size/2+i*8,2,1)
-  spr(18,gap.xpos,gap.ypos-gap.size/2-i*8-8,2,1)
- end
- spr(2,gap.xpos,gap.ypos+gap.size/2,2,1)
- spr(2,gap.xpos,gap.ypos-gap.size/2-8,2,1,false,true)
- --line(0,gap.ypos+gap.size/2,127,gap.ypos+gap.size/2,8)
- --line(0,gap.ypos-gap.size/2,127,gap.ypos-gap.size/2,8)
+ p.ypos=flr(rnd(128-p.size-16)+8+p.size/2)
+ return p
 end
 
 -->8
@@ -321,12 +335,16 @@ end
 -- logic --
 
 function check_pass()
- if pass==false and saucer.x>gap.xpos+16 then
-  pass=true
-  score+=1
- end
- if pass==true and saucer.x<gap.xpos then
-  pass=false
+ if #posts>0 then
+  local p=posts[1]
+  if pass==false and saucer.x>p.xpos+16 then
+   pass=true
+   score+=1
+   add(posts, make_post())
+  end
+  if pass==true and saucer.x<p.xpos then
+   pass=false
+  end
  end
 end
 
