@@ -69,15 +69,26 @@ function _draw()
   if boom then
    t=0
    state="gameover"
-   for i=1,10 do
-    local p=make_particule()
-    p.sx=(rnd()-0.5)*2
-    p.sy=(rnd()-0.5)*2
+   circfill(saucer.x+4, saucer.y+4, 15, 7)
+   for i=1,30 do
+    local p=make_spark()
+    p.sx=(rnd()-0.3)*9
+    p.sy=(rnd()-0.5)*9
     p.x=saucer.x+4
     p.y=saucer.y+4
+    p.ax=0.9
+    p.ay=0.9
+    p.gx=0.1
+    p.gy=0.1
     p.life=40
     add(parts,p)
    end
+   local sw=make_shockwave()
+   sw.x=saucer.x
+   sw.y=saucer.y
+   sw.sr=5
+   sw.life=5
+   add(parts,sw)
   end
  elseif state=="pause" then
   draw_post()
@@ -245,15 +256,33 @@ function init_particules()
  parts = {}
 end
 
-function make_particule()
+function _make_particule()
  local part = {}
- part.x = 0
- part.y = 0
- part.sx = 0
- part.sy = 0
- part.col = 7
- part.life = -1
+ part.x = 0 -- x position
+ part.y = 0 -- y position
+ part.sx = 0 -- x speed
+ part.sy = 0 -- y speed
+ part.ax = 1 -- x acceleration
+ part.ay = 1 -- y acceleration
+ part.gx = 0 -- x gravity
+ part.gy = 0 -- y gravity
+ part.col = 7 -- color
+ part.life = -1 -- life in frame, infinite if <0
  return part
+end
+
+function make_spark()
+  local p = _make_particule()
+  p.type="spark"
+  return p
+end
+
+function make_shockwave()
+ local p = _make_particule()
+ p.r=0
+ p.sr=1
+ p.type="shockwave"
+ return p
 end
 
 function update_particules()
@@ -263,6 +292,13 @@ function update_particules()
   end
   p.x+=p.sx
   p.y+=p.sy
+  p.sx=p.sx*p.ax
+  p.sy=p.sy*p.ay
+  p.sx+=p.gx
+  p.sy+=p.gy
+  if p.type=="shockwave" then
+   p.r+=p.sr
+  end
   if p.life==0 or p.x<0 or p.x>127 or p.y<0 or p.y>127 then
    del(parts,p)
   end
@@ -271,7 +307,11 @@ end
 
 function draw_particules()
  for p in all(parts) do
-  pset(p.x, p.y, p.col)
+  if p.type=="spark" then
+   pset(p.x, p.y, p.col)
+  elseif p.type=="shockwave" then
+   circ(p.x, p.y, p.r, p.col)
+  end
  end
 end
 
