@@ -8,7 +8,7 @@ function _init()
  gravity=0.8
  boost=12
  speed=2
- xpos=40
+ xpos=25
  star_density=0.002
  sound=true
  t=0
@@ -101,6 +101,8 @@ function _draw()
   draw_particules()
   rectfill(43,49,79,55,2)
   print("game over",44,50,7)
+  -- print("your score: "..score, 30, 60, 7)
+  draw_score()
   if blockout-t<=0 then
    rectfill(21,69,101,75,0)
    print("press ❎ to continue",22,70,7)
@@ -319,7 +321,7 @@ end
 -- logic --
 
 function check_pass()
- if pass==false and saucer.x>gap.xpos then
+ if pass==false and saucer.x>gap.xpos+16 then
   pass=true
   score+=1
  end
