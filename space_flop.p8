@@ -14,7 +14,7 @@ function _init()
  blockout=30 -- number of frames blocking input
 
  t=0
- 
+
  init_particules()
  init_stars()
  init_game()
@@ -37,7 +37,13 @@ function _update()
   update_particules()
   constrain_saucer()
   boom=collide()
+  bing=touch()
   check_pass()
+  if bing==1 then
+   saucer.b=-0.2
+  elseif bing==2 then
+   saucer.b=12
+  end
   if btnp(🅾️) then
    state="pause"
   end
@@ -68,9 +74,13 @@ function _draw()
   draw_posts()
   draw_saucer()
   draw_score()
+  if bing!=0 then
+   printh("bing "..bing)
+  end
   if boom then
    t=0
    state="gameover"
+   printh("boom")
    sfx(1)
    circfill(saucer.x+4, saucer.y+4, 15, 7)
    for i=1,30 do
@@ -117,6 +127,7 @@ function init_game()
  state="start" -- start, game, pause, gameover
  pass=false
  boom=false
+ bing=0
  score=0
  
  init_posts()
@@ -166,13 +177,26 @@ function constrain_saucer()
  end
 end
 
+function touch()
+ local t=0 -- no touch
+ for p in all(posts) do
+  if saucer.x+8>=p.xpos and saucer.y+8>=p.td and saucer.y+8<p.cd and saucer.x<=p.xpos+16 then
+   t=2 --bottom
+  end
+  if saucer.x+8>=p.xpos and saucer.y<=p.tu and saucer.y>p.cu and saucer.x<=p.xpos+16 then
+   t=1 --top
+  end
+ end
+ return t
+end
+
 function collide()
  local c=false
  for p in all(posts) do
-  if saucer.x+8>=p.xpos and saucer.y+8>=p.ypos+p.size/2 and saucer.x<=p.xpos+16 then
+  if saucer.x+8>=p.xpos and saucer.y+8>=p.cd and saucer.x<=p.xpos+16 then
    c=true
   end
-  if saucer.x+8>=p.xpos and saucer.y<=p.ypos-p.size/2 and saucer.x<=p.xpos+16 then
+  if saucer.x+8>=p.xpos and saucer.y<=p.cu and saucer.x<=p.xpos+16 then
    c=true
   end
  end
@@ -250,8 +274,10 @@ function draw_posts()
   end
   spr(2,p.xpos,p.ypos+p.size/2,2,1)
   spr(2,p.xpos,p.ypos-p.size/2-8,2,1,false,true)
-  --line(0,gap.ypos+gap.size/2,127,gap.ypos+gap.size/2,8)
-  --line(0,gap.ypos-gap.size/2,127,gap.ypos-gap.size/2,8)
+  -- line(0,p.td,127,p.td,10) -- touch down
+  -- line(0,p.tu,127,p.tu,15) -- touch up
+  -- line(0,p.cd,127,p.cd,8) -- collide down
+  -- line(0,p.cu,127,p.cu,14) -- collide up
  end
 end
 
@@ -262,6 +288,10 @@ function make_post()
   size=gap_size
  }
  p.ypos=flr(rnd(128-p.size-16)+8+p.size/2)
+ p.td=p.ypos+p.size/2 -- touch down
+ p.tu=p.ypos-1-p.size/2 -- touch up
+ p.cd=p.ypos+3+p.size/2 -- collide down
+ p.cu=p.ypos-4-p.size/2 -- collide up
  return p
 end
 
