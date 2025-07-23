@@ -73,10 +73,21 @@ function _draw()
   -- print("t:"..shieldtop,70,0,7)
   -- print("b:"..shieldbtm,70,8,7)
   draw_shields()
+  add(parts, make_spark())
   if bing==1 then
    shieldtop-=1
+   for i=1,5 do
+    local s=make_spark(saucer.x+4,saucer.y+2,(rnd()-1.1)*speed,rnd()-1,20)
+    add(parts,s)
+    sfx(2)
+   end
   elseif bing==2 then
    shieldbtm-=1
+   for i=1,5 do
+    local s=make_spark(saucer.x+4,saucer.y+6,(rnd()-1.1)*speed,rnd(),20)
+    add(parts,s)
+    sfx(2)
+   end
   end
   if shieldtop<=0 or shieldbtm<=0 then
    boom=true
@@ -87,16 +98,17 @@ function _draw()
    sfx(1)
    circfill(saucer.x+4, saucer.y+4, 15, 7)
    for i=1,30 do
-    local p=make_spark()
-    p.sx=(rnd()-0.3)*9
-    p.sy=(rnd()-0.5)*9
-    p.x=saucer.x+4
-    p.y=saucer.y+4
+    local p=make_spark(
+     saucer.x+4,
+     saucer.y+4,
+     (rnd()-0.3)*9,
+     (rnd()-0.5)*9,
+     40
+    )
     p.ax=0.9
     p.ay=0.9
     p.gx=0.1
     p.gy=0.1
-    p.life=40
     add(parts,p)
    end
    local sw=make_shockwave()
@@ -106,6 +118,7 @@ function _draw()
    sw.life=5
    add(parts,sw)
   end
+  draw_particules()
  elseif state=="gameover" then
   draw_posts()
   draw_particules()
@@ -318,13 +331,19 @@ function _make_particule()
  return part
 end
 
-function make_spark()
+function make_spark(x,y,sx,sy,life,col)
   local p = _make_particule()
+  p.x=x or 0
+  p.y=y or 0
+  p.sx=sx or 0
+  p.sy=sy or 0
+  p.life=life or -1
+  p.col=col or 7
   p.type="spark"
   return p
 end
 
-function make_shockwave()
+function make_shockwave(x,y,sr,life)
  local p = _make_particule()
  p.r=0
  p.sr=1
@@ -559,5 +578,6 @@ __label__
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000d66ddddddd666d00000
 
 __sfx__
-4902000003650066500b65013650186501d65021650246502665028650286502865028650296502965029650286502765026650266502465022650206501e6501a6501765014650126400f6400d6300c6200b620
+4802000003650066500b65013650186501d65021650246502665028650286502865028650296502965029650286502765026650266502465022650206501e6501a6501765014650126400f6400d6300c6200b620
 4b0200003b6703b6703b6703b6703b6703a6703a6703a6703867037670376703567033670306702f6602e6602c6502a650286502664023640206301c6201962016620136200c6200761003610006100000000000
+4a0200003b6503a6503a6303762033620276101c61000600006000060000600006000060000600006000060000600006000060000600006000060000600006000060000600006000060000600006000060000600
