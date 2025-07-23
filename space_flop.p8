@@ -14,6 +14,7 @@ function _init()
  blockout=30 -- number of frames blocking input
 
  t=0
+ tref=0
 
  init_particules()
  init_stars()
@@ -27,8 +28,16 @@ function _update()
    return
   end
   if btnp(❎) then
-   state="game"
+   tref=t
+   state="flyin"
+   sfx(3)
+  end
+ elseif state=="flyin" then
+  saucer.x=-8+(t-tref)*(xpos+8)/(30*2)
+  if t-tref>30*2 then
+   saucer.x=xpos
    add(posts, make_post())
+   state="game"
   end
  elseif state=="game" then
   update_stars()
@@ -66,6 +75,8 @@ function _draw()
    printc("press ❎ to fly",64,70,7)
   end
   printl("yragael2078",127,123,7)
+ elseif state=="flyin" then
+  draw_saucer()
  elseif state=="game" then
   draw_posts()
   draw_saucer()
@@ -152,7 +163,7 @@ end
 function init_saucer()
  saucer={
   img=1,
-  x=xpos,
+  x=-8,
   y=60,
   g=gravity,
   b=0
@@ -181,7 +192,7 @@ function update_saucer()
 end
 
 function draw_saucer()
- spr(saucer.img,xpos,saucer.y)
+ spr(saucer.img,saucer.x,saucer.y)
 end
 
 function constrain_saucer()
@@ -252,9 +263,10 @@ function init_stars()
  end
 end
 
-function update_stars()
+function update_stars(spd)
+ local spd=spd or 1
  for s in all(stars) do
-  s.x-=s.s
+  s.x-=s.s*spd
   if s.x<1 then
    del(stars, s)
   end
@@ -586,3 +598,4 @@ __sfx__
 4802000003630066300b63013630186301d63021630246302663028630286302863028630296302963029630286302763026630266302463022630206301e6301a6301763014630126300f6200d6200c6200b620
 4b0200003b6703b6703b6703b6703b6703a6703a6703a6703867037670376703567033670306702f6602e6602c6502a650286502664023640206301c6201962016620136200c6200761003610006100000000000
 4a0200003b6503a6503a6303762033620276101c61000600006000060000600006000060000600006000060000600006000060000600006000060000600006000060000600006000060000600006000060000600
+0d080000185501855018550185501f5511f5501f5501f550265502655026550265502555125552255522555225552255522555225552255522555225552255522554225542255322553225522255222551225515
