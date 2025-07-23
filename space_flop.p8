@@ -46,13 +46,6 @@ function _update()
    saucer.y=posts[1].td-10 -- -8 -2
   end
   boom=collide()
-  if btnp(🅾️) then
-   state="pause"
-  end
- elseif state=="pause" then
-  if btnp(🅾️) then
-   state="game"
-  end
  elseif state=="gameover" then
   update_particules()
   if t-blockout<=0 then
@@ -68,10 +61,11 @@ function _draw()
  cls()
  draw_stars()
  if state=="start" then
-  print("space flop",44,50,7)
+  printc("space flop",64,50,7)
   if blockout-t<=0 then
-   print("press ❎ to fly",33,70,7)
+   printc("press ❎ to fly",64,70,7)
   end
+  printl("yragael2078",127,123,7)
  elseif state=="game" then
   draw_posts()
   draw_saucer()
@@ -90,7 +84,6 @@ function _draw()
   if boom then
    t=0
    state="gameover"
-   printh("boom")
    sfx(1)
    circfill(saucer.x+4, saucer.y+4, 15, 7)
    for i=1,30 do
@@ -113,11 +106,6 @@ function _draw()
    sw.life=5
    add(parts,sw)
   end
- elseif state=="pause" then
-  draw_posts()
-  draw_saucer()
-  draw_pause()
-  draw_score()
  elseif state=="gameover" then
   draw_posts()
   draw_particules()
@@ -134,7 +122,7 @@ end
 
 function init_game()
  t=0
- state="start" -- start, game, pause, gameover
+ state="start" -- start, game, gameover
  pass=false
  boom=false
  shieldtop=3
@@ -392,7 +380,7 @@ function check_pass()
 end
 
 function draw_score()
- print(score,100,0,7)
+ printl(""..score,127,0,7)
 end
 
 function draw_shields()
@@ -408,10 +396,12 @@ function draw_shields()
  end
 end
 
-function draw_pause()
- rectfill(33,70,96,80,10)
- print("pause",55,73,0)
- print("press 🅾️",50,83,10)
+function printc(txt,x,y,col)
+ print(txt,x-#txt*2,y,col)
+end
+
+function printl(txt,x,y,col)
+ print(txt,x-#txt*4+2,y,col)
 end
 
 __gfx__
