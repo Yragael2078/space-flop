@@ -11,11 +11,12 @@ function _init()
  xpos=25 -- initial horizontal ship position
  gap_size=30 -- size of post gap
  star_density=0.002 -- density of stars on background
- blockout=30 -- number of frames blocking input
+ blockout=20 -- number of frames blocking input
 
  t=0
  tref=0
-
+ cartdata("yragael2078_space-flop_v1")
+ highscore=dget(0)
  init_particules()
  init_stars()
  init_game()
@@ -44,15 +45,16 @@ function _update()
   update_posts()
   update_saucer()
   update_particules()
-  constrain_saucer()
   bing=touch()
   check_pass()
   if bing==1 then
    saucer.b=-0.2
-   saucer.y=posts[1].tu+2
+   --saucer.y=posts[1].tu+2
+   saucer.y=saucer.y+2
   elseif bing==2 then
    saucer.b=12
-   saucer.y=posts[1].td-10 -- -8 -2
+   --saucer.y=posts[1].td-10 -- -8 -2
+   saucer.y=saucer.y-2 -- -8 -2
   end
   boom=collide()
  elseif state=="gameover" then
@@ -71,12 +73,14 @@ function _draw()
  draw_stars()
  if state=="start" then
   printc("space flop",64,50,7)
+  printc("high score: "..highscore,64,70,7)
   if blockout-t<=0 then
-   printc("press ❎ to fly",64,70,7)
+   printc("press ❎ to fly",64,100,6)
   end
-  printl("yragael2078",127,123,7)
+  printl("BY yragael2078",127,123,13)
  elseif state=="flyin" then
   draw_saucer()
+  draw_score()
  elseif state=="game" then
   draw_posts()
   draw_saucer()
@@ -106,6 +110,7 @@ function _draw()
    t=0
    state="gameover"
    sfx(1)
+   save_score()
    circfill(saucer.x+4, saucer.y+4, 15, 7)
    for i=1,30 do
     local p=make_spark(
@@ -135,10 +140,13 @@ function _draw()
   rectfill(43,49,79,55,2)
   print("game over",44,50,7)
   -- print("your score: "..score, 30, 60, 7)
+  if highscoreflag then
+   printc("new high score!",64,70,7)
+  end
   draw_score()
   if blockout-t<=0 then
-   rectfill(21,69,101,75,0)
-   print("press ❎ to continue",22,70,7)
+   rectfill(21,99,101,105,0)
+   print("press ❎ to continue",22,100,6)
   end
  end
 end
@@ -152,6 +160,7 @@ function init_game()
  shieldbtm=3
  bing=0
  score=0
+ highscoreflag=false
  
  init_posts()
  init_saucer()
@@ -195,26 +204,26 @@ function draw_saucer()
  spr(saucer.img,saucer.x,saucer.y)
 end
 
-function constrain_saucer()
+function touch()
+ local t=0 -- no touch
  if saucer.y<1 then
   saucer.y=1
   saucer.g=gravity
   saucer.b=0
+  t=1
  elseif saucer.y+8>126 then
   saucer.y=126-8
   saucer.g=gravity
   saucer.b=0
- end
-end
-
-function touch()
- local t=0 -- no touch
- for p in all(posts) do
-  if saucer.x+8>=p.xpos and saucer.y+8>=p.td and saucer.y+8<p.cd and saucer.x<=p.xpos+16 then
-   t=2 --bottom
-  end
-  if saucer.x+8>=p.xpos and saucer.y<=p.tu and saucer.y>p.cu and saucer.x<=p.xpos+16 then
-   t=1 --top
+  t=2
+ else
+  for p in all(posts) do
+   if saucer.x+8>=p.xpos and saucer.y+8>=p.td and saucer.y+8<p.cd and saucer.x<=p.xpos+16 then
+    t=2 --bottom
+   end
+   if saucer.x+8>=p.xpos and saucer.y<=p.tu and saucer.y>p.cu and saucer.x<=p.xpos+16 then
+    t=1 --top
+   end
   end
  end
  return t
@@ -407,6 +416,12 @@ function check_pass()
   if pass==false and saucer.x>p.xpos+16 then
    pass=true
    score+=1
+   if score>highscore then
+    if highscoreflag==false then
+     sfx(4)
+    end
+    highscoreflag=true
+   end
    add(posts, make_post())
   end
   if pass==true and saucer.x<p.xpos then
@@ -415,8 +430,33 @@ function check_pass()
  end
 end
 
+function save_score()
+ if highscoreflag then
+  highscore=score
+  dset(0,highscore)
+ end
+end
+
 function draw_score()
- printl(""..score,127,0,7)
+ local scorestr=""..score
+ local diff=4-#scorestr
+ if diff>0 then
+  for d=1,diff do
+   scorestr="-"..scorestr
+  end
+ end
+ local sprites={[0]=32,33,34,35,36,37,38,39,40,41,42}
+ for i=1,4 do
+  local spri=0
+  if scorestr[5-i]=="-" then
+   spri=10
+  else
+   spri=scorestr[5-i]+0
+  end
+  pal(7,10)
+  spr(sprites[spri],123-5*(i-1),1)
+  pal()
+ end
 end
 
 function draw_shields()
@@ -599,3 +639,4 @@ __sfx__
 4b0200003b6703b6703b6703b6703b6703a6703a6703a6703867037670376703567033670306702f6602e6602c6502a650286502664023640206301c6201962016620136200c6200761003610006100000000000
 4a0200003b6503a6503a6303762033620276101c61000600006000060000600006000060000600006000060000600006000060000600006000060000600006000060000600006000060000600006000060000600
 0d080000185501855018550185501f5511f5501f5501f550265502655026550265502555125552255522555225552255522555225552255522555225552255522554225542255322553225522255222551225515
+000500001e5732b0532f0530050300503005030050300503005030050300503005030050300503005030050300503005030050300503005030050300503005030050300503005030050300503005030050300503
