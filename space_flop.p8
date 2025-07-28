@@ -58,6 +58,7 @@ function _update()
    saucer.y=saucer.y-2 -- -8 -2
   end
   boom=collide()
+  collide_part(pickups)
  elseif state=="gameover" then
   update_particules(parts)
   if t-blockout<=0 then
@@ -392,6 +393,13 @@ function make_energy_pickup()
  return p
 end
 
+function make_gold_pickup()
+ local p=make_energy_pickup()
+ p.spr=17
+ p.type="gpup"
+ return p
+end
+
 function update_particules(pts)
  for p in all(pts) do
   if p.life > 0 then
@@ -423,8 +431,22 @@ function draw_particules(pts)
    pset(p.x, p.y, p.col)
   elseif p.type=="shockwave" then
    circ(p.x, p.y, p.r, p.col)
-  elseif p.type=="epup" then
+  elseif p.type=="epup" or p.type=="gpup" then
    spr(p.spr,p.x,p.y)
+  end
+ end
+end
+
+function collide_part(pts)
+ for p in all(pts) do
+  if not (saucer.x+8<p.x or saucer.x>p.x+8 or saucer.y+8<p.y or saucer.y>p.y+8) then
+   sfx(5)
+   if p.type=="epup" then
+    shieldtop,shieldbtm=3,3
+   elseif p.type=="gpup" then
+    score+=1
+   end
+   del(pts,p)
   end
  end
 end
@@ -438,7 +460,8 @@ function check_pass()
   if pass==false and saucer.x>p.xpos+16 then
    pass=true
    score+=1
-   add(pickups,make_energy_pickup())
+   add_pickup(pickups)
+   --add(pickups,make_energy_pickup())
    if score>highscore then
     if highscoreflag==false then
      sfx(4)
@@ -450,6 +473,14 @@ function check_pass()
   if pass==true and saucer.x<p.xpos then
    pass=false
   end
+ end
+end
+
+function add_pickup(pts)
+ if (shieldtop<3 or shieldbtm<3) and rnd()<0.3 then
+  add(pts,make_energy_pickup())
+ elseif rnd()<0.3 then
+  add(pts,make_gold_pickup())
  end
 end
 
@@ -663,3 +694,4 @@ __sfx__
 4a0200003b6503a6503a6303762033620276101c61000600006000060000600006000060000600006000060000600006000060000600006000060000600006000060000600006000060000600006000060000600
 0d080000185501855018550185501f5511f5501f5501f550265502655026550265502555125552255522555225552255522555225552255522555225552255522554225542255322553225522255222551225515
 000500001e5732b0532f0530050300503005030050300503005030050300503005030050300503005030050300503005030050300503005030050300503005030050300503005030050300503005030050300503
+01030000170501a0301c010220202f050000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
