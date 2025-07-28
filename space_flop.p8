@@ -44,7 +44,8 @@ function _update()
   update_stars()
   update_posts()
   update_saucer()
-  update_particules()
+  update_particules(parts)
+  update_particules(pickups)
   bing=touch()
   check_pass()
   if bing==1 then
@@ -58,7 +59,7 @@ function _update()
   end
   boom=collide()
  elseif state=="gameover" then
-  update_particules()
+  update_particules(parts)
   if t-blockout<=0 then
    return
   end
@@ -133,10 +134,12 @@ function _draw()
    sw.life=5
    add(parts,sw)
   end
-  draw_particules()
+  draw_particules(parts)
+  draw_particules(pickups)
  elseif state=="gameover" then
   draw_posts()
-  draw_particules()
+  draw_particules(parts)
+  draw_particules(pickups)
   rectfill(43,49,79,55,2)
   print("game over",44,50,7)
   -- print("your score: "..score, 30, 60, 7)
@@ -339,26 +342,28 @@ end
 -- particuls --
 
 function init_particules()
- parts = {}
+ parts={}
+ pickups={}
 end
 
 function _make_particule()
- local part = {}
- part.x = 0 -- x position
- part.y = 0 -- y position
- part.sx = 0 -- x speed
- part.sy = 0 -- y speed
- part.ax = 1 -- x acceleration
- part.ay = 1 -- y acceleration
- part.gx = 0 -- x gravity
- part.gy = 0 -- y gravity
- part.col = 7 -- color
- part.life = -1 -- life in frame, infinite if <0
+ local part={}
+ part.x=0 -- x position
+ part.y=0 -- y position
+ part.sx=0 -- x speed
+ part.sy=0 -- y speed
+ part.ax=1 -- x acceleration
+ part.ay=1 -- y acceleration
+ part.gx=0 -- x gravity
+ part.gy=0 -- y gravity
+ part.col=7 -- color
+ part.life=-1 -- life in frame, infinite if <0
+ part.ative=false -- false not seen on screen, true already displayed
  return part
 end
 
 function make_spark(x,y,sx,sy,life,col)
-  local p = _make_particule()
+  local p=_make_particule()
   p.x=x or 0
   p.y=y or 0
   p.sx=sx or 0
@@ -370,15 +375,25 @@ function make_spark(x,y,sx,sy,life,col)
 end
 
 function make_shockwave(x,y,sr,life)
- local p = _make_particule()
+ local p=_make_particule()
  p.r=0
  p.sr=1
  p.type="shockwave"
  return p
 end
 
-function update_particules()
- for p in all(parts) do
+function make_energy_pickup()
+ local p=_make_particule()
+ p.spr=16
+ p.type="epup"
+ p.x=127+64
+ p.y=rnd(100)+14
+ p.sx=-speed
+ return p
+end
+
+function update_particules(pts)
+ for p in all(pts) do
   if p.life > 0 then
    p.life-=1
   end
@@ -391,18 +406,25 @@ function update_particules()
   if p.type=="shockwave" then
    p.r+=p.sr
   end
-  if p.life==0 or p.x<0 or p.x>127 or p.y<0 or p.y>127 then
-   del(parts,p)
+  if p.x>=0 and p.x<128 and p.y>=0 and p.y<128 then
+   if not p.active then
+    p.active=true
+   end
+  end
+  if p.active and (p.life==0 or p.x<0 or p.x>127 or p.y<0 or p.y>127) then
+   del(pts,p)
   end
  end
 end
 
-function draw_particules()
- for p in all(parts) do
+function draw_particules(pts)
+ for p in all(pts) do
   if p.type=="spark" then
    pset(p.x, p.y, p.col)
   elseif p.type=="shockwave" then
    circ(p.x, p.y, p.r, p.col)
+  elseif p.type=="epup" then
+   spr(p.spr,p.x,p.y)
   end
  end
 end
@@ -416,6 +438,7 @@ function check_pass()
   if pass==false and saucer.x>p.xpos+16 then
    pass=true
    score+=1
+   add(pickups,make_energy_pickup())
    if score>highscore then
     if highscoreflag==false then
      sfx(4)
@@ -491,10 +514,10 @@ __gfx__
 0000000006d00d600d66ddddddd666d0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000d66ddddddd666d0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000d66ddddddd666d0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00033000000000000d66ddddddd666d0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0037b300000000000d66ddddddd666d0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-003bb300000000000d66ddddddd666d0444444440444444000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00033000000000000d66ddddddd666d0488888840488884000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00033000000990000d66ddddddd666d0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0037b3000097a9000d66ddddddd666d0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+003bb300009aa9000d66ddddddd666d0444444440444444000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00033000000990000d66ddddddd666d0488888840488884000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000d66ddddddd666d0044884400044440000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000d66ddddddd666d0000440000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 07700000055000000770000007700000055000000770000007700000077000000770000007700000055000000000000000000000000000000000000000000000
