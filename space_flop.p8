@@ -28,7 +28,7 @@ function _update()
  t+=1
  if state=="start" then
   update_saucer()
-  saucer.x+=1
+  saucer.x+=speed
   if saucer.x>127 then
    saucer.x=-8
   end
@@ -36,21 +36,33 @@ function _update()
    return
   end
   if btnp(❎) then
-   tref=t
    state="flyout"
-   sfx(3)
   end
  elseif state=="flyout" then
   update_saucer()
   saucer.x+=saucer.x*0.1
   if saucer.x>127 then
    state="flyin"
+   sfx(3)
    init_saucer()
    saucer.x=-8
+   tref=t
   end
  elseif state=="flyin" then
-  saucer.x=-8+(t-tref)*(xpos+8)/(30*2)
-  if t-tref>30*2 then
+  spd=((xpos+8)-saucer.x)/15
+  local brake=true
+  if spd<1 then
+   spd=1
+   brake=false
+  end
+  if brake==false then
+   spd+=spd*0.1
+   if spd>=speed then
+    spd=speed
+   end
+  end
+  saucer.x+=spd
+  if saucer.x>=xpos then
    saucer.x=xpos
    add(posts, make_post())
    state="game"
@@ -191,6 +203,7 @@ function init_game()
  
  init_posts()
  init_saucer()
+ pickups={}
  saucer.x=-8
  saucer.y=40
  saucer.g=0
@@ -204,6 +217,8 @@ function init_saucer()
   img=1,
   x=-8,
   y=60,
+  sx=0,
+  sy=0,
   g=gravity,
   b=0
  }
@@ -211,22 +226,27 @@ end
 
 function update_saucer()
  local sy=saucer.y
- if btnp(❎) and state=="game" then
-  saucer.b=boost
-  saucer.g=gravity
-  sfx(0)
-  for i=1,20 do
-   local p=make_spark(saucer.x+1+rnd(6),saucer.y+8,-speed,rnd(3)+0.5,5,1)
-   local p2=make_spark(saucer.x+2+rnd(4),saucer.y+8,-speed,rnd(2)+0.5,5,12)
-   add(parts,p)
-   add(parts,p2)
+ if state=="game" then
+  if btnp(❎) then
+   saucer.b=boost
+   saucer.g=gravity
+   sfx(0)
+   for i=1,20 do
+    local p=make_spark(saucer.x+1+rnd(6),saucer.y+8,-speed,rnd(3)+0.5,5,1)
+    local p2=make_spark(saucer.x+2+rnd(4),saucer.y+8,-speed,rnd(2)+0.5,5,12)
+    add(parts,p)
+    add(parts,p2)
+   end
+  else
+   if saucer.b>0 then
+    saucer.b=saucer.b*0.6
+   end
+   saucer.g=saucer.g*1.1
+   saucer.y+=saucer.g-saucer.b
   end
  else
-  if saucer.b>0 then
-   saucer.b=saucer.b*0.6
-  end
-  saucer.g=saucer.g*1.1
-  saucer.y+=saucer.g-saucer.b
+  saucer.x+=saucer.sx
+  saucer.y+=saucer.sy
  end
 end
 
@@ -503,10 +523,10 @@ function check_pass()
 end
 
 function add_pickup(pts)
- if score>3 then
-  if (shieldtop<3 or shieldbtm<3) and rnd()<0.3 then
+ if score>3 and rnd()<0.3 then
+  if (shieldtop<3 or shieldbtm<3) and rnd()<0.5 then
    add(pts,make_energy_pickup())
-  elseif rnd()<0.3 then
+  else
    add(pts,make_gold_pickup())
   end
  end
